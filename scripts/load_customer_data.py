@@ -22,11 +22,14 @@ Usage:
   python scripts/load_customer_data.py --file seeds/customer_incoming.csv --delimiter ','
 """
 
+from __future__ import annotations
+
 import argparse
 import csv
 import logging
 import os
 import sys
+from typing import List, Tuple
 
 import teradatasql
 
@@ -91,7 +94,7 @@ def load_file(
         insert_sql = f"INSERT INTO {target_table} ({col_list}) VALUES ({placeholders})"
 
         total_rows = 0
-        batch: list[tuple] = []
+        batch: List[Tuple[str, ...]] = []
 
         with open(filepath, newline="", encoding="utf-8") as fh:
             reader = csv.reader(fh, delimiter=delimiter)

@@ -26,11 +26,14 @@ Usage:
   python scripts/export_customer_data.py --output males.csv --where "gender = 'M'"
 """
 
+from __future__ import annotations
+
 import argparse
 import csv
 import logging
 import os
 import sys
+from typing import Optional
 
 import teradatasql
 
@@ -73,7 +76,7 @@ def export_data(
     source_table: str,
     output_path: str,
     delimiter: str,
-    where_clause: str | None,
+    where_clause: Optional[str],
     include_header: bool,
 ) -> int:
     """
