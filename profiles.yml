@@ -1,0 +1,20 @@
+# Template profiles.yml for Teradata connection.
+# Actual credentials should be managed externally via environment variables.
+# Do NOT commit real credentials to this file.
+#
+# Required environment variables:
+#   TD_HOST     - Teradata server hostname or IP
+#   TD_USER     - Teradata username
+#   TD_PASSWORD  - Teradata password
+
+teradata:
+  target: dev
+  outputs:
+    dev:
+      type: teradata
+      host: "{{ env_var('TD_HOST') }}"
+      user: "{{ env_var('TD_USER') }}"
+      password: "{{ env_var('TD_PASSWORD') }}"
+      schema: financial
+      tmode: ANSI
+      log_mech: TD2

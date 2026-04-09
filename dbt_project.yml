@@ -1,0 +1,22 @@
+name: teradata_utilities
+version: '1.0.0'
+config-version: 2
+
+profile: teradata
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+analysis-paths: ["analysis"]
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  teradata_utilities:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

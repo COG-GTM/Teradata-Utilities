@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: customer_new
+    description: >
+      Final customer dimension table built as an incremental model with merge
+      strategy. Replaces the MultiLoad upsert logic from CustomerUPDATE.ml.
+      On each incremental run, existing rows (matched on cust_id) are updated
+      for income, age, and years_with_bank; new rows are inserted with all columns.
+    columns:
+      - name: cust_id
+        description: "Unique customer identifier"
+        tests:
+          - unique
+          - not_null
+      - name: income
+        description: "Annual income of the customer"
+        tests:
+          - not_null
+      - name: age
+        description: "Age of the customer in years"
+        tests:
+          - not_null
+      - name: years_with_bank
+        description: "Number of years the customer has banked with the institution"
+        tests:
+          - not_null
+      - name: nbr_children
+        description: "Number of children the customer has"
+      - name: gender
+        description: "Gender code (M = Male, F = Female)"
+        tests:
+          - accepted_values:
+              values: ['M', 'F']
+      - name: marital_status
+        description: "Marital status code (Y = Married, N = Not married)"
+        tests:
+          - accepted_values:
+              values: ['Y', 'N']
