@@ -28,13 +28,13 @@ This repository has been migrated from legacy Teradata-native ETL scripts (FastL
 ├── models/
 │   ├── staging/
 │   │   ├── schema.yml               # Source definitions and staging model docs/tests
-│   │   └── stg_customer.sql         # Staging model with type casting
+│   │   └── stg_customer.sql         # Staging model (native types passthrough)
 │   └── marts/
 │       ├── schema.yml               # Mart model documentation and tests
 │       └── customer_new.sql         # Incremental (merge/upsert) model
 ├── seeds/
-│   ├── customer_existing.csv        # Seed: existing customer data (500 rows)
-│   └── customer_incoming.csv        # Seed: incoming customer data (151 rows)
+│   ├── customer.csv                 # Seed: existing customer data (500 rows) → creates financial.customer
+│   └── customer_incoming.csv        # Seed: incoming customer data (151 rows, for ingestion script testing)
 ├── macros/
 │   └── delete_customer.sql          # Delete macro (replaces Customerdelete.ml.txt)
 ├── scripts/
