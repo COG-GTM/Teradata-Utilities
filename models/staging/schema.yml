@@ -38,24 +38,25 @@ sources:
 models:
   - name: stg_customer
     description: >
-      Staging model that selects from the raw customer source table and applies
-      type casting to normalize column types. Replaces the CAST expressions found
-      in the original TPT export scripts (Export.tpt.txt, tptscript.txt).
+      Staging model that selects from the raw customer source table, passing
+      through columns with their native types. The legacy TPT export scripts
+      applied CHAR casts for flat-file formatting only; those are handled by
+      the companion export script (scripts/export_customer_data.py) instead.
     columns:
       - name: cust_id
-        description: "Customer identifier cast to CHAR(25)"
+        description: "Unique customer identifier (e.g. C0001)"
         tests:
           - unique
           - not_null
       - name: income
-        description: "Income cast to CHAR(25)"
+        description: "Annual income of the customer (INTEGER)"
       - name: age
-        description: "Age cast to CHAR(2)"
+        description: "Age of the customer in years (SMALLINT)"
       - name: years_with_bank
-        description: "Years with bank cast to CHAR(2)"
+        description: "Number of years with the bank (SMALLINT)"
       - name: nbr_children
-        description: "Number of children cast to CHAR(2)"
+        description: "Number of children (SMALLINT)"
       - name: gender
-        description: "Gender code cast to CHAR(2)"
+        description: "Gender code (CHAR(1): M = Male, F = Female)"
       - name: marital_status
-        description: "Marital status code cast to CHAR(2)"
+        description: "Marital status code (CHAR(1): Y = Married, N = Not married)"
