@@ -103,6 +103,7 @@ def load_file(
             first_row = next(reader, None)
             if first_row is None:
                 logger.warning("Input file is empty: %s", filepath)
+                conn.commit()
                 return 0
 
             if first_row[0].strip().lower() == "cust_id":
