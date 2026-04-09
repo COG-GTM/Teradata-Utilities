@@ -1,0 +1,62 @@
+version: 2
+
+sources:
+  - name: financial
+    schema: financial
+    description: "Raw financial data tables loaded by external ingestion tools"
+    tables:
+      - name: customer
+        description: >
+          Raw customer data loaded by an external ingestion tool (replacing
+          FastLoad/MultiLoad/TPT load scripts). Contains demographic and
+          banking relationship attributes for each customer.
+        columns:
+          - name: cust_id
+            description: "Unique customer identifier (e.g. C0001)"
+            tests:
+              - unique
+              - not_null
+          - name: income
+            description: "Annual income of the customer"
+          - name: age
+            description: "Age of the customer in years"
+          - name: years_with_bank
+            description: "Number of years the customer has banked with the institution"
+          - name: nbr_children
+            description: "Number of children the customer has"
+          - name: gender
+            description: "Gender code of the customer (M = Male, F = Female)"
+            tests:
+              - accepted_values:
+                  values: ['M', 'F']
+          - name: marital_status
+            description: "Marital status code (Y = Married, N = Not married)"
+            tests:
+              - accepted_values:
+                  values: ['Y', 'N']
+
+models:
+  - name: stg_customer
+    description: >
+      Staging model that selects from the raw customer source table, passing
+      through columns with their native types. The legacy TPT export scripts
+      applied CHAR casts for flat-file formatting only; those are handled by
+      the companion export script (scripts/export_customer_data.py) instead.
+    columns:
+      - name: cust_id
+        description: "Unique customer identifier (e.g. C0001)"
+        tests:
+          - unique
+          - not_null
+      - name: income
+        description: "Annual income of the customer (INTEGER)"
+      - name: age
+        description: "Age of the customer in years (SMALLINT)"
+      - name: years_with_bank
+        description: "Number of years with the bank (SMALLINT)"
+      - name: nbr_children
+        description: "Number of children (SMALLINT)"
+      - name: gender
+        description: "Gender code (CHAR(1): M = Male, F = Female)"
+      - name: marital_status
+        description: "Marital status code (CHAR(1): Y = Married, N = Not married)"
