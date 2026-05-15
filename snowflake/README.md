@@ -57,6 +57,7 @@ snowsql -f snowflake/ddl/05_stages.sql
 Upload data files to the internal stages:
 
 ```bash
+snowsql -q "PUT file://snowflake/data/customer_existing.csv @FINANCIAL.PUBLIC.CUSTOMER_STAGE/seed/ AUTO_COMPRESS=TRUE OVERWRITE=TRUE;"
 snowsql -q "PUT file://snowflake/data/customer_incoming_pipe.txt @FINANCIAL.PUBLIC.CUSTOMER_STAGE/fastload/ AUTO_COMPRESS=TRUE OVERWRITE=TRUE;"
 snowsql -q "PUT file://snowflake/data/customer_incoming_pipe.txt @FINANCIAL.PUBLIC.CUSTOMER_STAGE/mload_upsert/ AUTO_COMPRESS=TRUE OVERWRITE=TRUE;"
 snowsql -q "PUT file://snowflake/data/customer_incoming_pipe.txt @FINANCIAL.PUBLIC.CUSTOMER_STAGE/tpt_load/ AUTO_COMPRESS=TRUE OVERWRITE=TRUE;"
@@ -68,16 +69,19 @@ snowsql -q "PUT file://snowflake/data/customer_incoming_pipe.txt @TPCH.PUBLIC.CU
 Execute load scripts in this order:
 
 ```bash
-# a. FastLoad equivalent
+# a. Seed the CUSTOMER source table (required before exports and conditional loads)
+snowsql -f snowflake/load/seed_customer.sql
+
+# b. FastLoad equivalent
 snowsql -f snowflake/load/fastload_customer_new.sql
 
-# b. MultiLoad INSERT equivalent
+# c. MultiLoad INSERT equivalent
 snowsql -f snowflake/load/mload_insert_customer.sql
 
-# c. MultiLoad UPSERT equivalent (MERGE)
+# d. MultiLoad UPSERT equivalent (MERGE)
 snowsql -f snowflake/load/mload_upsert_customer.sql
 
-# d. TPT Load equivalent
+# e. TPT Load equivalent
 snowsql -f snowflake/load/tpt_load_customer.sql
 ```
 
@@ -139,6 +143,7 @@ snowflake/
 │   ├── 04_file_formats.sql                # FILE FORMAT for pipe and CSV
 │   └── 05_stages.sql                      # Internal stages for data staging
 ├── load/
+│   ├── seed_customer.sql                  # Seed CUSTOMER table from CSV
 │   ├── fastload_customer_new.sql          # FastLoad → PUT + COPY INTO
 │   ├── mload_insert_customer.sql          # MultiLoad INSERT → COPY INTO
 │   ├── mload_upsert_customer.sql          # MultiLoad UPSERT → staging + MERGE

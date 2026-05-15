@@ -5,12 +5,13 @@
 --
 -- Execution order:
 --   1. DDL setup (run once manually via the ddl/ scripts)
---   2. TASK_FASTLOAD_CUSTOMER_NEW      - Load raw data via FastLoad pattern
---   3. TASK_MLOAD_INSERT_CUSTOMER      - Load data into TPCH via MultiLoad pattern
---   4. TASK_MLOAD_UPSERT_CUSTOMER      - Upsert data via MERGE pattern
---   5. TASK_TPT_LOAD_CUSTOMER          - Load data via TPT pattern
---   6. TASK_CONDITIONAL_LOAD           - Conditional table setup + data copy
---   7. TASK_EXPORT_CUSTOMER            - Export data to stage files
+--   2. TASK_SEED_CUSTOMER              - Seed CUSTOMER table from CSV
+--   3. TASK_FASTLOAD_CUSTOMER_NEW      - Load raw data via FastLoad pattern
+--   4. TASK_MLOAD_INSERT_CUSTOMER      - Load data into TPCH via MultiLoad pattern
+--   5. TASK_MLOAD_UPSERT_CUSTOMER      - Upsert data via MERGE pattern
+--   6. TASK_TPT_LOAD_CUSTOMER          - Load data via TPT pattern
+--   7. TASK_CONDITIONAL_LOAD           - Conditional table setup + data copy
+--   8. TASK_EXPORT_CUSTOMER            - Export data to stage files
 --
 -- Prerequisites:
 --   - A warehouse (e.g., ETL_WH) must exist
@@ -22,11 +23,25 @@ USE DATABASE FINANCIAL;
 USE SCHEMA PUBLIC;
 
 -- ---------------------------------------------------------------------------
--- Root task: FastLoad pattern
+-- Root task: Seed the CUSTOMER source table from CSV
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE TASK FINANCIAL.PUBLIC.TASK_SEED_CUSTOMER
+    WAREHOUSE = ETL_WH
+    SCHEDULE  = 'USING CRON 0 2 * * * America/New_York'  -- Daily at 2 AM ET
+AS
+    COPY INTO FINANCIAL.PUBLIC.CUSTOMER
+        (CUST_ID, INCOME, AGE, YEARS_WITH_BANK, NBR_CHILDREN, GENDER, MARITAL_STATUS)
+    FROM @FINANCIAL.PUBLIC.CUSTOMER_STAGE/seed/
+        FILE_FORMAT = (FORMAT_NAME = 'FINANCIAL.PUBLIC.CSV_WITH_HEADER_FORMAT')
+        ON_ERROR = 'CONTINUE'
+        PURGE = TRUE;
+
+-- ---------------------------------------------------------------------------
+-- Child task: FastLoad pattern (runs after seed)
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE TASK FINANCIAL.PUBLIC.TASK_FASTLOAD_CUSTOMER_NEW
     WAREHOUSE = ETL_WH
-    SCHEDULE  = 'USING CRON 0 2 * * * America/New_York'  -- Daily at 2 AM ET
+    AFTER FINANCIAL.PUBLIC.TASK_SEED_CUSTOMER
 AS
     COPY INTO FINANCIAL.PUBLIC.CUSTOMER_NEW
         (CUST_ID, INCOME, AGE, YEARS_WITH_BANK, NBR_CHILDREN, GENDER, MARITAL_STATUS)
@@ -139,3 +154,4 @@ ALTER TASK FINANCIAL.PUBLIC.TASK_TPT_LOAD_CUSTOMER      RESUME;
 ALTER TASK FINANCIAL.PUBLIC.TASK_MLOAD_UPSERT_CUSTOMER  RESUME;
 ALTER TASK TPCH.PUBLIC.TASK_MLOAD_INSERT_CUSTOMER       RESUME;
 ALTER TASK FINANCIAL.PUBLIC.TASK_FASTLOAD_CUSTOMER_NEW  RESUME;
+ALTER TASK FINANCIAL.PUBLIC.TASK_SEED_CUSTOMER          RESUME;
