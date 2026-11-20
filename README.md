@@ -25,7 +25,7 @@ Tools and Utilities (TTU) client against a Teradata system.
 | `Customerdelete.ml.txt` | MultiLoad | DELETE task that removes every row from `financial.customer_new`. |
 | `mloadtpt.txt` | TPT | Job `LOAD_FROM_FILE`: DataConnector reads `customer.txt`, LOAD operator inserts into `FINANCIAL.CUSTOMER_TPT_MLOAD`. |
 | `Condbteq.bteq` | BTEQ | Empties `customer_aug18`, creates it if the delete fails, then copies `customer` into it. |
-| `Condbteq2.bteq` | BTEQ | Counts `customer_aug18`; quits if empty, otherwise runs `run.bteq.txt` (not in this repo). |
+| `Condbteq2.bteq` | BTEQ | Counts `customer_aug18` and is meant to quit if it is empty, otherwise run `run.bteq.txt` (not in this repo). The `.IF ACTIVITYCOUNT=0` check never fires after `COUNT(*)`, so it always runs the follow-on script (see [Known issues](docs/architecture.md#known-issues)). |
 | `Export.bteq.txt` | BTEQ | Report export of `customer` with a `\|` separator to `Customer_export_dec09.txt`. |
 | `csvexport.bteq.txt` | BTEQ | Exports `cust_id,income` from `customer` to `csvexportdec09.csv`. |
 | `FastExport.fexp.txt` | FastExport | Exports `cust_id\|income` from `financial.customer` to `exportdec09.txt`. |

@@ -34,7 +34,7 @@ digraph teradata_utilities {
   subgraph cluster_bteq {
     label="BTEQ control"; style=rounded; color="#6b4c9a"; fontsize=16;
     condbteq  [label="Condbteq.bteq\nrefresh customer_aug18", fillcolor="#e9e1f4"];
-    condbteq2 [label="Condbteq2.bteq\nrun run.bteq.txt if rows exist", fillcolor="#e9e1f4"];
+    condbteq2 [label="Condbteq2.bteq\nruns run.bteq.txt\n(empty-table quit never fires)", fillcolor="#e9e1f4"];
   }
 
   subgraph cluster_export {
