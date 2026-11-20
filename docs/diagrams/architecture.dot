@@ -1,0 +1,78 @@
+// Teradata-Utilities: scripts and data flow.
+// Edit this file, then run docs/diagrams/render.sh to regenerate architecture.png and architecture.svg.
+digraph teradata_utilities {
+  graph [rankdir=TB, fontname="DejaVu Sans", fontsize=18, labelloc=t, nodesep=0.35, ranksep=0.55, pad=0.3,
+         label="Teradata-Utilities: scripts and data flow (master)"];
+  node  [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=15, fillcolor=white, color="#555555"];
+  edge  [fontname="DejaVu Sans", fontsize=12, color="#444444"];
+
+  subgraph cluster_inputs {
+    label="Input files (pipe-delimited)"; style="rounded,dashed"; color="#7a7a7a"; fontsize=16;
+    pipe_sample [label="data_files/customer_incoming_pipe.txt\n(in repo, 150 rows)", fillcolor="#e8f4e8"];
+    ext_inputs  [label="Customer.txt · CustomerMLOAD.txt\nCustomer_DATA.txt · customer.txt\n(not in repo)", fillcolor="#f3f3f3", style="rounded,filled,dashed"];
+  }
+
+  subgraph cluster_load {
+    label="Load / maintain"; style=rounded; color="#2f6f9f"; fontsize=16;
+    fastload   [label="Customer_fastload.fl.txt\nFastLoad (empty table)", fillcolor="#dbe9f6"];
+    ml_insert  [label="Customerinsert.ml.txt\nMultiLoad insert", fillcolor="#dbe9f6"];
+    ml_upsert  [label="CustomerUPDATE.ml\ndata_files/CustomerUPDATE.ml\nMultiLoad upsert", fillcolor="#dbe9f6"];
+    ml_delete  [label="Customerdelete.ml.txt\nMultiLoad DELETE task", fillcolor="#dbe9f6"];
+    tpt_load   [label="mloadtpt.txt\nTPT LOAD operator", fillcolor="#dbe9f6"];
+  }
+
+  subgraph cluster_td {
+    label="Teradata system (192.168.128.128 / 127.0.0.1, user dbc)"; style=rounded; color="#b5651d"; fontsize=16;
+    customer     [label="FINANCIAL.customer\n(source table, DDL not in repo)", fillcolor="#fbe5d0"];
+    customer_new [label="FINANCIAL.customer_new", fillcolor="#fbe5d0"];
+    aug18        [label="FINANCIAL.customer_aug18", fillcolor="#fbe5d0"];
+    tpt_tbl      [label="FINANCIAL.CUSTOMER_TPT_MLOAD", fillcolor="#fbe5d0"];
+    tpch_tbl     [label="TPCH.CUSTOMER_NEW_ML", fillcolor="#fbe5d0"];
+    restart      [label="Restart log / error tables (written by\nFastLoad, MultiLoad, FastExport, TPT)\nlog_new · CUST_ML_LOG · log_cust_fexp\nCUSTOMER_TPT_LOG · CUSTOMER_2018_ET/UV", fillcolor="#f6efe6", fontsize=13];
+  }
+
+  subgraph cluster_bteq {
+    label="BTEQ control"; style=rounded; color="#6b4c9a"; fontsize=16;
+    condbteq  [label="Condbteq.bteq\nrefresh customer_aug18", fillcolor="#e9e1f4"];
+    condbteq2 [label="Condbteq2.bteq\nrun run.bteq.txt if rows exist", fillcolor="#e9e1f4"];
+  }
+
+  subgraph cluster_export {
+    label="Export"; style=rounded; color="#2e7d32"; fontsize=16;
+    bteq_exp  [label="Export.bteq.txt\nBTEQ report, '|' separator", fillcolor="#dff0df"];
+    csv_exp   [label="csvexport.bteq.txt\nBTEQ cust_id,income", fillcolor="#dff0df"];
+    fexp      [label="FastExport.fexp.txt\ncust_id|income", fillcolor="#dff0df"];
+    fexp1     [label="FastExport_1.fexp.txt\nsplit by gender M / F", fillcolor="#dff0df"];
+    tpt_exp   [label="Export.tpt.txt · tptscript.txt\nTPT EXPORT → DataConnector", fillcolor="#dff0df"];
+  }
+
+  subgraph cluster_outputs {
+    label="Output files"; style="rounded,dashed"; color="#7a7a7a"; fontsize=16;
+    out_files [label="Customer_export_dec09.txt · csvexportdec09.csv\nexportdec09.txt · export_malesdec09.txt\nexport_femaledec09.txt · EXPORTOUTPUT.TXT", fillcolor="#f3f3f3"];
+  }
+
+  ext_inputs  -> fastload;
+  ext_inputs  -> ml_insert;
+  ext_inputs  -> ml_upsert [label="root copy"];
+  ext_inputs  -> tpt_load;
+  pipe_sample -> ml_upsert [label="data_files copy"];
+
+  fastload  -> customer_new [label="INSERT"];
+  ml_upsert -> customer_new [label="UPDATE else INSERT"];
+  ml_delete -> customer_new [label="DELETE all rows"];
+  ml_insert -> tpch_tbl     [label="INSERT"];
+  tpt_load  -> tpt_tbl      [label="INSERT"];
+
+  customer  -> condbteq [label="SELECT *"];
+  aug18     -> condbteq [dir=back, label="DELETE / CREATE,\nINSERT"];
+  aug18     -> condbteq2 [label="COUNT(*)"];
+
+  customer -> bteq_exp; customer -> csv_exp; customer -> fexp; customer -> fexp1; customer -> tpt_exp;
+  bteq_exp -> out_files; csv_exp -> out_files; fexp -> out_files; fexp1 -> out_files; tpt_exp -> out_files;
+
+  // Layout only: stack the wide rows so the image stays readable on GitHub.
+  customer_new -> customer [style=invis];
+  tpch_tbl -> restart [style=invis];
+  bteq_exp -> fexp [style=invis];
+  csv_exp -> fexp1 [style=invis];
+}
